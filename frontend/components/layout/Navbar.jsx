@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { BASE_URL } from '@/lib/api/client';
 
 function TicketIcon({ className = 'w-5 h-5' }) {
   return (
@@ -54,7 +55,7 @@ export default function Navbar() {
             <NavLink href="/events"   active={isActive('/events')}   data-testid="nav-events">Events</NavLink>
             <NavLink href="/bookings" active={isActive('/bookings')} data-testid="nav-bookings">My Bookings</NavLink>
             <a
-              href="http://localhost:3001/api/docs"
+              href={`${BASE_URL}/docs`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -164,7 +165,7 @@ export default function Navbar() {
             </Link>
           ))}
           <a
-            href="http://localhost:3001/api/docs"
+            href={`${BASE_URL}/docs`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setMobileOpen(false)}

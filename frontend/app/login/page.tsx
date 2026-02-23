@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useToast } from '@/components/ui/Toast';
+import { BASE_URL } from '@/lib/api/client';
 
 const FEATURES = [
   { icon: '⚡', text: 'Live REST APIs — test real endpoints, not mocks' },
@@ -127,7 +128,7 @@ export default function LoginPage() {
 
         <div className="w-full max-w-sm">
           <a
-            href="http://localhost:3001/api/docs"
+            href={`${BASE_URL}/docs`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 text-xs text-emerald-600 hover:text-emerald-700 font-medium mb-4 transition-colors"

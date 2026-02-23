@@ -1,3 +1,5 @@
+import { BASE_URL } from '@/lib/api/client';
+
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-400 mt-auto">
@@ -62,7 +64,7 @@ export default function Footer() {
                 { label: 'Browse Events',       href: '/events' },
                 { label: 'My Bookings',         href: '/bookings' },
                 { label: 'Manage Events',       href: '/admin/events' },
-                { label: 'API Documentation',   href: 'http://localhost:3001/api/docs', external: true },
+                { label: 'API Documentation',   href: `${BASE_URL}/docs`, external: true },
               ].map(({ label, href, external }) => (
                 <li key={label}>
                   <a
