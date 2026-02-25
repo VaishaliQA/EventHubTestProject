@@ -156,8 +156,10 @@ jobs:
   # ║  Flow:
   # ║    1. Checkout PR code on runner
   # ║    2. SCP backend/prisma/ → temp dir on server
-  # ║    3. SSH: run prisma migrate diff using the uploaded files
-  # ║       (cd to backend dir first so Prisma reads DATABASE_URL from .env)
+  # ║    3. SSH: run prisma migrate diff
+  # ║         --from-schema-datasource (actual DB) --to-schema-datamodel (PR schema)
+  # ║         cd to backend dir first so Prisma reads DATABASE_URL from .env
+  # ║         No shadow DB required — fully read-only on the production DB
   # ║    4. Cleanup temp dir (always, even on failure)
   # ║
   # ║  Depends on: backend-checks (only runs if backend is valid)
@@ -200,13 +202,20 @@ jobs:
           echo "✓ backend/prisma/ uploaded"
 
       # ── Run prisma migrate diff (read-only) ───────────────────────────────────
-      # We cd to the deployed backend dir so Prisma can load DATABASE_URL
-      # from /home/ubuntu/eventhub/backend/.env — the schema at the uploaded
-      # path uses env("DATABASE_URL") which Prisma resolves from the cwd's .env.
+      # WHY this flag combination (not --from-migrations):
+      #   --from-migrations requires --shadow-database-url so Prisma can replay
+      #   migrations into a temporary DB — we don't have a shadow DB in CI.
       #
-      # --from-migrations : PR's migration history (what SHOULD be in the DB)
-      # --to-schema-datasource : reads the datasource URL from the PR's schema.prisma
-      # --exit-code : 0 = no diff (healthy), 1 = diff found (drift or pending migration)
+      # Instead we use:
+      #   --from-schema-datasource : connects to the ACTUAL production DB via
+      #                              DATABASE_URL loaded from backend/.env (cwd)
+      #   --to-schema-datamodel    : uses the PR's schema.prisma model definitions
+      #                              as the desired target state
+      #
+      # This answers: "does the production DB already match what this PR's
+      # schema.prisma expects?" — no shadow DB required, fully read-only.
+      #
+      # --exit-code : 0 = no diff (DB matches PR schema), 1 = diff found
       - name: Run schema drift check
         run: |
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes \
@@ -214,21 +223,20 @@ jobs:
               "set -euo pipefail
                cd /home/ubuntu/eventhub/backend
 
-               echo '=== Schema Drift Check: PR migrations vs production DB ==='
-               echo 'PR schema     : ${{ env.TEMP_DIR }}/prisma/schema.prisma'
-               echo 'PR migrations : ${{ env.TEMP_DIR }}/prisma/migrations/'
+               echo '=== Schema Drift Check: production DB vs PR schema ==='
+               echo 'PR schema : ${{ env.TEMP_DIR }}/prisma/schema.prisma'
                echo ''
 
                npx prisma migrate diff \
-                 --from-migrations ${{ env.TEMP_DIR }}/prisma/migrations \
-                 --to-schema-datasource ${{ env.TEMP_DIR }}/prisma/schema.prisma \
+                 --from-schema-datasource ${{ env.TEMP_DIR }}/prisma/schema.prisma \
+                 --to-schema-datamodel    ${{ env.TEMP_DIR }}/prisma/schema.prisma \
                  --exit-code \
-                 && echo '✓ No drift: DB is in sync with this PR migration history' \
+                 && echo '✓ No drift: production DB matches PR schema' \
                  || {
                    echo ''
-                   echo '✗ Drift detected between PR migrations and production DB.'
+                   echo '✗ DB does not match the PR schema.'
                    echo '  Possible causes:'
-                   echo '  1. PR adds new migrations not yet applied to production.'
+                   echo '  1. PR adds new schema changes with pending migrations.'
                    echo '     Apply them manually before merging:'
                    echo '       ssh server'
                    echo '       cd /home/ubuntu/eventhub/backend'
