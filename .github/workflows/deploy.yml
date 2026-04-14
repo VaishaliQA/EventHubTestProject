@@ -80,9 +80,9 @@ jobs:
     #   - Environment-specific secrets
     #   - Deployment history and status in the GitHub UI
     # Configure protection rules at: Settings → Environments → production
-    environment:
-      name: production
-      url: https://eventhub.rahulshettyacademy.com   # ← update with your actual URL
+    # environment:
+    #   name: production
+    #   url: https://eventhub.rahulshettyacademy.com   # ← update with your actual URL
 
     steps:
       # ── Checkout (needed for workflow context, actual code comes via git pull) ──
