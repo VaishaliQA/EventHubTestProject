@@ -296,9 +296,9 @@ All key UI elements have `data-testid` attributes for Playwright automation:
 **Example Playwright usage:**
 ```javascript
 await page.click('[data-testid="book-now-btn"]');
-await page.fill('[data-testid="customer-name"]', 'Rahul Shetty');
-await page.fill('[data-testid="customer-email"]', 'rahul@test.com');
-await page.fill('[data-testid="customer-phone"]', '9876543210');
+await page.fill('[data-testid="customer-name"]', 'Tom Tim');
+await page.fill('[data-testid="customer-email"]', 'tom@test.com');
+await page.fill('[data-testid="customer-phone"]', '9476547210');
 await page.click('[data-testid="confirm-booking-btn"]');
 await expect(page.locator('[data-testid="booking-ref"]')).toBeVisible();
 ```
