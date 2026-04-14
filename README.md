@@ -166,9 +166,9 @@ Base URL: `http://localhost:3001`
 ```json
 {
   "eventId": 1,
-  "customerName": "Rahul Shetty",
-  "customerEmail": "rahul@example.com",
-  "customerPhone": "9876543210",
+  "customerName": "Tom Kim",
+  "customerEmail": "test@example.com",
+  "customerPhone": "9346734210",
   "quantity": 2
 }
 ```
