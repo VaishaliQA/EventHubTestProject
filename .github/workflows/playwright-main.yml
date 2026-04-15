@@ -8,6 +8,28 @@ jobs:
   playwright-tests:
     name: Run Playwright tests on main
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: eventhub
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DATABASE_URL: mysql://root:password@127.0.0.1:3306/eventhub
+      JWT_SECRET: ci_jwt_secret_2026
+      NODE_ENV: development
+      PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
 
     steps:
       - name: Checkout repository
@@ -20,15 +42,51 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
+
+      - name: Install backend and frontend dependencies
+        run: npm run setup
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
+      - name: Initialize database schema
+        run: |
+          cd backend
+          npx prisma db push
+
+      - name: Start application services
+        run: |
+          nohup npm run dev > /tmp/dev.log 2>&1 &
+          echo $! > /tmp/dev.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000 >/dev/null && curl -fsS http://localhost:3001/api/health >/dev/null; then
+              echo "Application services are ready"
+              break
+            fi
+            echo "Waiting for application services... ($i)"
+            sleep 2
+          done
+          cat /tmp/dev.log
+
       - name: Run Playwright tests
         run: npm run test
 
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Cleanup application services
+        if: always()
+        run: |
+          if [ -f /tmp/dev.pid ]; then
+            kill "$(cat /tmp/dev.pid)" || true
+          fi
       - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
