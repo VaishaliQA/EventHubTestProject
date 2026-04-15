@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const BASE_URL = 'https://eventhub.rahulshettyacademy.com';
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'https://eventhub.rahulshettyacademy.com';
 const USER_A_EMAIL = 'rahulshetty1@gmail.com';
 const USER_A_PASSWORD = 'Magiclife1!';
 const USER_B_EMAIL = 'rahulshetty1@yahoo.com';

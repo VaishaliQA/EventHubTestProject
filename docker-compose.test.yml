@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Playwright test runner
+  playwright:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: eventhub-playwright
+    network_mode: host  # Use host network to access localhost services
+    volumes:
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results
+    environment:
+      - CI=true
+      - NODE_ENV=test
+      - PLAYWRIGHT_BASE_URL=http://localhost:3000
+    depends_on:
+      - backend
+      - frontend
+    command: npm run test
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eventhub-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=mysql://root:password@mysql:3306/eventhub
+    depends_on:
+      - mysql
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend Next.js app
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eventhub-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  # MySQL database
+  mysql:
+    image: mysql:8.0
+    container_name: eventhub-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=eventhub
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

@@ -94,6 +94,47 @@ npm run dev
 
 ---
 
+## Testing with Docker
+
+### Run E2E Tests in Docker Container
+
+The project includes Docker support for running Playwright tests in an isolated container with Node 20 and all browsers pre-installed.
+
+#### Prerequisites
+- Docker installed and running
+- MySQL database (local or Docker)
+
+#### Quick Test Run
+```bash
+# Start application services
+npm run dev
+
+# Run tests in Docker (in another terminal)
+docker build -f Dockerfile.test -t eventhub-test .
+docker run --rm --network host \
+  -v $(pwd)/playwright-report:/app/playwright-report \
+  -v $(pwd)/test-results:/app/test-results \
+  -e PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+  eventhub-test
+```
+
+#### Using Docker Compose (Full Stack)
+```bash
+# Start full stack with Docker Compose
+docker-compose -f docker-compose.test.yml up -d mysql backend frontend
+
+# Run tests
+docker-compose -f docker-compose.test.yml up playwright
+
+# View results
+npm run test:report
+```
+
+#### CI/CD Integration
+Tests automatically run in Docker containers on GitHub Actions for every PR and deployment. HTML reports are uploaded as artifacts.
+
+---
+
 ## Root Scripts
 
 | Script | Description |

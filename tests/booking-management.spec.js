@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL      = 'https://eventhub.rahulshettyacademy.com';
+const BASE_URL      = process.env.PLAYWRIGHT_BASE_URL || 'https://eventhub.rahulshettyacademy.com';
 const USER_EMAIL    = 'rahulshetty1@gmail.com';
 const USER_PASSWORD = 'Magiclife1!';
 

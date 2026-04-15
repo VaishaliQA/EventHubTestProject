@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 
 // Test account credentials for login and registration tests
 const TEST_USER_EMAIL = 'testuser' + Date.now() + '@example.com';

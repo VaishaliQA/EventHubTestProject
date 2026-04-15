@@ -1,0 +1,42 @@
+# Dockerfile for Playwright E2E Tests
+FROM mcr.microsoft.com/playwright:v1.48.0-jammy
+
+# The base image already includes:
+# - Node.js 20.x
+# - npm
+# - All Playwright browsers (chromium, firefox, webkit)
+# - System dependencies for browsers
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for better Docker layer caching
+COPY package*.json ./
+COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
+
+# Install root-level dependencies (includes Playwright)
+RUN npm ci
+
+# Install backend dependencies
+RUN cd backend && npm ci
+
+# Install frontend dependencies
+RUN cd frontend && npm ci
+
+# Copy the rest of the application code
+COPY . .
+
+# Ensure Playwright browsers are installed (should already be in base image, but confirm)
+RUN npx playwright install --with-deps
+
+# Create directories for test results
+RUN mkdir -p playwright-report test-results
+
+# Set environment variables for testing
+ENV NODE_ENV=test
+ENV CI=true
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+# Default command to run tests
+CMD ["npm", "run", "test"]
